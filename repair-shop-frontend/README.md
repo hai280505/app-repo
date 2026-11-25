@@ -1,4 +1,5 @@
 # React + Vite
+> Demo CI/CD: commit code -> Jenkins tự build -> push image lên Harbor registry.
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
