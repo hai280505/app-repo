@@ -2,36 +2,37 @@ pipeline {
     agent any
 
     environment {
-        FE_IMAGE = 'phanhuukhoinguyen1205/repairshop-frontend'
+        REGISTRY = '192.168.56.104'
+        FE_IMAGE = "${REGISTRY}/demo/repairshop-frontend"
         FE_TAG   = "5.0.${BUILD_NUMBER}"
     }
 
     stages {
         stage('Check Docker') {
-            steps { bat 'docker version' }
+            steps { sh 'docker version' }
         }
 
         stage('Build frontend') {
             steps {
                 dir('repair-shop-frontend') {
-                    bat 'docker build -t %FE_IMAGE%:%FE_TAG% .'
+                    sh 'docker build -t $FE_IMAGE:$FE_TAG .'
                 }
             }
         }
 
-        stage('Push frontend') {
+        stage('Push frontend to Harbor') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
+                withCredentials([usernamePassword(credentialsId: 'harbor-cred',
                                                   usernameVariable: 'REG_USER',
                                                   passwordVariable: 'REG_PASS')]) {
-                    bat 'echo %REG_PASS%| docker login -u %REG_USER% --password-stdin'
-                    bat 'docker push %FE_IMAGE%:%FE_TAG%'
+                    sh 'echo "$REG_PASS" | docker login $REGISTRY -u "$REG_USER" --password-stdin'
+                    sh 'docker push $FE_IMAGE:$FE_TAG'
                 }
             }
         }
     }
 
     post {
-        always { bat 'docker logout' }
+        always { sh 'docker logout $REGISTRY' }
     }
 }
